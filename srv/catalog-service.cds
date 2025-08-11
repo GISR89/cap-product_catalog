@@ -17,27 +17,35 @@ using {com.training as training} from '../db/training';
 
 service CatalogService {
     entity Products          as
-        select from logali.materials.Products {
-            // ID,
-            // Name          as ProductName     @mandatory,
-            // Description                      @mandatory,
-            // ImageUrl,
-            // ReleaseDate,
-            // DiscontinuedDate,
-            // Price                            @mandatory,
-            // Height,
-            // Width,
-            // Depth,
-            *,
-            Quantity                         @mandatory,
+        select from logali.reports.Products {
+            ID,
+            Name          as ProductName     @mandatory,
+            Description                      @mandatory,
+            ImageUrl,
+            ReleaseDate,
+            DiscontinuedDate,
+            Price                            @mandatory,
+            Height,
+            Width,
+            Depth,
+            Quantity                         @(
+                mandatory,
+                assert.range: [
+                    0.00,
+                    20.00
+                ]
+            ),
             UnitOfMeasure as ToUnitOfMeasure @mandatory,
-            Currency      as ToCurrency,
+            Currency      as ToCurrency      @mandatory,
             Category      as ToCategory      @mandatory,
             Category.Name as Category        @readonly,
             DimensionUnit as ToDimensionUnit,
-            SalesDate,
+            SalesData,
             Supplier,
             Reviews,
+            Rating,
+            StockAvailability,
+            ToStockAvailability
         };
 
     @readonly
@@ -58,7 +66,7 @@ service CatalogService {
             Name,
             Rating,
             Comment,
-            CreatedAt,
+            //CreatedAt,
             Product,
         };
 
@@ -132,4 +140,37 @@ define service MyService {
             SalesData.Currency.Description
         from logali.materials.Products;
 
+    entity EntityInfix      as
+        select Supplier[Name = 'Exotic Liquids'].Phone from logali.materials.Products
+        where
+            Products.Name = 'Bread';
+
+    entity EntityJoin       as
+        select Phone from logali.materials.Products
+        left join logali.sales.Suppliers as Supp
+            on (
+                Supp.ID   = Products.Supplier.ID
+            )
+            and Supp.Name = 'Exotic Liquids'
+        where
+            Products.Name = 'Bread';
+}
+
+define service Reports {
+    entity AverageRating as projection on logali.reports.AverageRating;
+
+    entity EntityCasting as
+        select
+            cast(
+                Price as Integer
+            )     as Price,
+            Price as Price2 : Integer
+        from logali.materials.Products
+
+    entity EntityExist   as
+        select from logali.materials.Products {
+            Name
+        }
+        where
+            exists Supplier[Name = 'Exotic Liquids'];
 }
