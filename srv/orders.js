@@ -1,5 +1,6 @@
 const cds = require("@sap/cds");
-const { Orders } = cds.entities("com.training");
+//const { Orders } = cds.entities("com.training");
+const { Orders } = cds.entities("ManageOrders");
 
 module.exports = (srv) => {
     //*******READ***/
@@ -102,4 +103,30 @@ module.exports = (srv) => {
         console.log("Before End", returnData);
         return await returnData;
     });
+
+    //*******FUNCTION***/
+      srv.on("getClientTaxRate", async req => {
+    const { clientEmail } = req.data;
+
+    // Leemos directamente la columna Country_code
+    const results = await cds.transaction(req)
+      .read(Orders, ["Country_code"])
+      .where({ ClientEmail: clientEmail });
+
+    if (!results.length) {
+      return 0; // cliente no encontrado
+    }
+
+    const countryCode = results[0].Country_code?.trim();
+
+    switch (countryCode) {
+      case "ES":
+        return 21.5;
+      case "UK":
+        return 24.6;
+      default:
+        return 0;
+    }
+  });
+
 }; 
