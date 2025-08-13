@@ -3,6 +3,11 @@ const cds = require("@sap/cds");
 const { Orders } = cds.entities("ManageOrders");
 
 module.exports = (srv) => {
+     srv.before("*", (req) => {
+      console.log(`Method: ${req.method}`);
+      console.log(`Target: ${req.target}`);
+     });
+
     //*******READ***/
     srv.on("READ", "Orders", async (req) => {
 
@@ -105,28 +110,59 @@ module.exports = (srv) => {
     });
 
     //*******FUNCTION***/
-      srv.on("getClientTaxRate", async req => {
-    const { clientEmail } = req.data;
+    srv.on("getClientTaxRate", async req => {
+        const { clientEmail } = req.data;
 
-    // Leemos directamente la columna Country_code
-    const results = await cds.transaction(req)
-      .read(Orders, ["Country_code"])
-      .where({ ClientEmail: clientEmail });
+        // Leemos directamente la columna Country_code
+        const results = await cds.transaction(req)
+            .read(Orders, ["Country_code"])
+            .where({ ClientEmail: clientEmail });
 
-    if (!results.length) {
-      return 0; // cliente no encontrado
-    }
+        if (!results.length) {
+            return 0; // cliente no encontrado
+        }
 
-    const countryCode = results[0].Country_code?.trim();
+        const countryCode = results[0].Country_code?.trim();
 
-    switch (countryCode) {
-      case "ES":
-        return 21.5;
-      case "UK":
-        return 24.6;
-      default:
-        return 0;
-    }
-  });
+        switch (countryCode) {
+            case "ES":
+                return 21.5;
+            case "UK":
+                return 24.6;
+            default:
+                return 0;
+        }
+    });
+
+    //*******ACTION***/
+    srv.on("cancelOrder", async (req) => {
+        const { clientEmail } = req.data;
+
+        const resultsRead = await cds.transaction(req)
+            .read(Orders, ["FirstName", "LastName", "Approved"])
+            .where({ ClientEmail: clientEmail });
+
+        let returnOrder = {
+            status: "",
+            message: ""
+        };
+
+        console.log(clientEmail);
+        console.log(resultsRead);
+
+        if (resultsRead[0].Approved == false) {
+            const resultsUpdate = await cds.transaction(req)
+                .update(Orders)
+                .set({ Status: "C" })
+                .where({ ClientEmail: clientEmail });
+            returnOrder.status = "Succeeded";
+            returnOrder.message = `The Order placed by ${resultsRead[0].FirstName} ${resultsRead[0].LastName} was canceled`;
+        } else {
+            returnOrder.status = "Failed";
+            returnOrder.message = `The Order placed by ${resultsRead[0].FirstName} ${resultsRead[0].LastName} was NOT canceled because was already approved`;
+        }
+        console.log("Action cancelOrder executed");
+        return returnOrder
+    });
 
 }; 
