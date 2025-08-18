@@ -28,7 +28,8 @@
     "cds-swagger-ui-express": "^0.10.0"
   },
   "scripts": {
-    "start": "cds watch"
+    "start": "cds watch",
+    "watch-product": "cds watch --open product/webapp/index.html?sap-ui-xx-viewCache=false"
   },
   "cds": {
     "features": {
@@ -45,5 +46,8 @@
         }
       }
     }
-  }
+  },
+  "sapux": [
+    "app/product"
+  ]
 }

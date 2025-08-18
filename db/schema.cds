@@ -143,7 +143,7 @@ context sales {
     entity SelProducts3 as
         select from materials.Products
         left join materials.ProductReview
-            on Products.Name = ProductReview.Name
+            on Products.ID = ProductReview.ID
         {
             Rating,
             Products.Name,
@@ -170,7 +170,7 @@ context reports {
     entity AverageRating as
         select from logali.materials.ProductReview {
             Product.ID  as ProductId,
-            avg(Rating) as AverageRating : Decimal(16, 2)
+            avg( Rating ) as AverageRating : Decimal(16, 2)
         }
         group by
             Product.ID;
@@ -180,8 +180,8 @@ context reports {
         mixin {
             ToStockAvailability : Association to logali.materials.StockAvailability
                                       on ToStockAvailability.ID = $projection.StockAvailability;
-            ToAverageRating     : Association to AverageRating
-                                      on ToAverageRating.ProductId = ID;
+            ToAverageRating     : Association to logali.reports.AverageRating
+                                      on ToAverageRating.ProductId = $projection.ID;
         }
         into {
             *,

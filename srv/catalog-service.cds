@@ -66,8 +66,8 @@ service CatalogService {
             Name,
             Rating,
             Comment,
-            //CreatedAt,
-            Product,
+            createdAt,
+            Product as ToProduct,
         };
 
     @readonly
